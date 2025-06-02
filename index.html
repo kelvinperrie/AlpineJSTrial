@@ -1,0 +1,81 @@
+<html>
+<head>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body {
+            font-family: Tahoma, sans-serif;
+        }
+        .haveZeroPokemon {
+            color: red;
+        }
+        .haveSomePokemon {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+
+
+    <script>
+        // example of a complex object for a page model
+        function pageModel() {
+            return {
+                // changes to the collection are reflected automatically in the html
+                pokemon : [ { name : 'Pikachu', type : 'Electric' }, { name: 'Squirtle', type: 'Water' }, { name: 'Bulbasaur', type: 'Plant' } ],
+
+                // properties to bind to inputs
+                newPokemonName : '',
+                newPokemonType : '',
+
+                pageTitle : '<h3>Your pokemon</h3>',
+
+                // methods can be called on click
+                addNewPokemon() {
+                    this.pokemon.push({ name : this.newPokemonName, type : this.newPokemonType })
+                    this.newPokemonName = '';
+                    this.newPokemonType = '';
+                },
+
+                deletePokemon(name) {
+                    this.pokemon = this.pokemon.filter(function( item ) {
+                        return item.name !== name;
+                    });
+                }
+            }
+        };
+
+    </script>
+
+    <!-- bind the page model - can't do this on a template element -->
+    <div x-data="pageModel">
+        <!-- x-html vs x-text = much the same as knockout.js -->
+        <p x-html="pageTitle"></p>
+        <!-- can use any js in a x-text etc -->
+        <!-- conditional classes, set using the shorthand for the x-bind -->
+        <div>You have <span x-text="pokemon.length"  :class="pokemon.length === 0 ? 'haveZeroPokemon' : 'haveSomePokemon'"></span> pokemon</div>
+        <br/>
+        <!-- conditionally show or hide html -->
+        <div x-show="pokemon.length === 0">
+            buddy, you ain't got no pokemons. Better get catching.
+        </div>
+        <div x-show="pokemon.length > 0">
+            Your pokemon are:<br/>
+            <!-- x-for must be on a template item? keys are important if reordering? -->
+            <template x-for="item in pokemon" :key="item.name">
+                <li>
+                    <!-- must only be a single child element in the template element -->
+                    <span x-text="item.name"></span> (<span x-text="item.type"></span>) - <span @click="deletePokemon(item.name)">delete</span>
+                </li>
+            </template>
+        </div>
+        <br/>
+        <!-- use x-bind for setting attributes -->
+        <span x-bind:style="'color:green;'">Add a new pokemon:</span>
+        <!-- model is used for inputs, bind it to an existing data value -->
+        <input x-model="newPokemonName" placeholder="Name ...">
+        <input x-model="newPokemonType" placeholder="Type ...">
+        <!-- shorthand; use @ for click -->
+        <button @click="addNewPokemon()">Add</button>
+    </div>
+</body>
+</html>
