@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<script src="https://cdn.jsdelivr.net/npm/@@tailwindcss/browser@4"></script>
+
+<div class="text-center">
+    <h1 class="display-4">We<span class=text-sm>at the hotel, motel, holiday inn</span>lcome</h1>
+
+</div>
+
+    <p>
+        The goal here is to see how well alpine.js integrates into a .Net MVC site.
+        <ul class="list-disc">
+            <li>Can we have standalone js models that alpine binds to the html - sure, but they have to be the js object format?</li>
+            <li>Can we pull data from a .net controller into alpine - sure</li>
+            <li>Can we have a computed property; a prop that uses other properties, and when those properties it depends on changes the computed prop is automatically updated - sure, think have to use a get property though, which is ok?</li>
+            <li>I suppose it should do that other stuff like conditional display and binding to inputs ... - sure</li>
+            <li>Can we get a mostly seamless refresh on a collection of data - sure</li>
+            <li>I guess binding loops within loops would be good to check - sure</li>
+        </ul>
+        Go to the <a href="@Url.Action("Index", null, new { area = string.Empty, controller = "Customer" })">demo page</a>
+
+    </p>

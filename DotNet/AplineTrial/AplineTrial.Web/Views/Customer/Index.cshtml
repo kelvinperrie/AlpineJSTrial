@@ -1,0 +1,123 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="" x-data="CustomerPageModel">
+    <button class="px-4 block border rounded py-2" @@click="getData()">Refresh data!</button> (this will return a random amount of records)
+    <template x-for="customer in customers" :key="customer.businessName">
+        <div class="customer-tile p-4 m-2 bg-cyan-500 text-white border-solid border-2">
+            <span class="font-bold" x-text="customer.businessName"></span> - <span x-text="customer.industryDescription"></span>
+            <div>
+                Motto: <span x-text="customer.motto"></span>
+                <span x-show="customer.motto == ''">[no motto set!]</span>
+                <br />
+                <input x-model="customer.motto" placeholder="Set motto ...">
+            </div>
+            
+            <div x-show="customer.showContacts">
+                contacts:<br />
+                <template x-for="contact in customer.contacts">
+                    <li>
+                        <span x-text="contact.name"></span> - <span x-text="contact.email"></span>
+                    </li>
+                </template>
+            </div>
+            <div x-on:click="customer.toggleShowingContacts()">show/hide contacts</div>
+            <div>
+                located at:<br />
+                <template x-for="address in customer.addresses">
+                    <li>
+                        <span x-text="address.fullAddress"></span> - <span x-text="address.country"></span>
+                    </li>
+                </template>
+            </div>
+            <div x-show="customer.tagLine !== ''" class="flex justify-center-safe">
+                <span x-text="customer.tagLine" class="p-3 text-xl"></span>
+            </div>
+        </div>
+    </template>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@tailwindcss/browser@4"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+
+    function CustomerContactsModel(customerContactData) {
+
+        return {
+            name: customerContactData.name,
+            email: customerContactData.email
+        }
+    }
+
+    function CustomerAddressModel(customerAddressData) {
+
+        let joinedAddress = customerAddressData.addressLine1;
+        if (customerAddressData.addressLine2 != null) joinedAddress = joinedAddress + ", " + customerAddressData.addressLine2;
+        if (customerAddressData.addressLine3 != null) joinedAddress = joinedAddress + ", " + customerAddressData.addressLine3;
+        if (customerAddressData.addressLine4 != null) joinedAddress = joinedAddress + ", " + customerAddressData.addressLine4;
+
+        return {
+            fullAddress: joinedAddress,
+            country: customerAddressData.country
+        }
+    };
+
+    function CustomerModel(customerData) {
+
+        console.log(customerData);
+
+        return {
+            businessName: customerData.businessName,
+            industryDescription: customerData.industryDescription,
+            addresses: customerData.addresses.map(a => CustomerAddressModel(a)),
+            contacts: customerData.contacts.map(c => CustomerContactsModel(c)),
+            motto: customerData.motto,
+            showContacts: true,
+            // this is like a ko.computed, the value in the html is automatically updated if any of the properties it depends on change
+            get tagLine() {
+                if (this.motto === '') return "";
+                return this.businessName + " - " + this.motto
+            },
+            // this is triggered by an event in the code e.g. click
+            toggleShowingContacts() {
+                console.log(this.showContacts)
+                this.showContacts = !this.showContacts;
+                console.log(this.showContacts)
+            }
+        }
+    };
+    
+    function CustomerPageModel() {
+        return {
+
+            customers: [],
+
+            // popuplate our js model
+            async getData() {
+                const url = "https://localhost:7096/Customer/CustomerData";
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Response status: ${response.status}`);
+                    }
+
+                    const json = await response.json();
+                    console.log("our data is");
+                    console.log(json);
+                    this.customers = json.customers.map(c => CustomerModel(c));
+                    console.log("our customers collection is now")
+                    console.log(this.customers)
+
+                } catch (error) {
+                    console.error(error.message);
+                }
+            },
+
+            init() {
+                this.getData();
+            }
+        }
+    };
+
+</script>
