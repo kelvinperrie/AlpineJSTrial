@@ -1,0 +1,330 @@
+﻿@{
+    ViewData["Title"] = "drag and drop";
+}
+
+<style>
+    .drag-and-drop {
+        display: flex;
+        padding: 20px;
+        margin: 0 auto;
+    }
+    
+    .drag-and-drop__container
+    {
+        position: relative;
+        width: 50%;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+    }
+
+
+    .drag-and-drop__title {
+        padding: 5px 10px;
+        font-size: 18px;
+        background: #ddd;
+        margin-bottom: 0;
+    }
+
+    .drag-and-drop__items {
+        position: relative;
+        height: 100%;
+        padding-left: 0;
+    }
+    
+    .drag-and-drop__items--adding
+    {
+        /* background-color: #9AE6B4; */
+    }
+
+    .drag-and-drop__item {
+        padding: 4px 10px;
+        border: 1px solid #ccc;
+        border-top: 0;
+        line-height: 1;
+        cursor: move;
+        background-color: #fff;
+        border-radius: 15px;
+        width: fit-content;
+        margin: 2px;
+        /* word-wrap: normal; */
+        /* word-break: normal; */
+        display: inline-block;
+    }
+
+    .drag-and-drop__item:hover {
+        background-color: #eee;
+    }
+
+    .drag-and-drop__item--dragging {
+        color: #ccc !important;
+        background-color: #fff !important;
+    }
+    
+    .months-container {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .month {
+        border: 1px solid #767676;
+        padding: 0.5em;
+        margin: 1px;
+        background-color: #d9d9d9;
+        border-radius: 15px;
+    }
+
+    .week__assigned-people {
+        width: 175px;
+        min-height: 25px;
+    }
+
+    .week {
+        display: flex;
+        padding: 1px;
+        margin: 1px;
+        background-color: beige;
+        padding: 3px;
+    }
+    .week__label {
+        width: 1.5em;
+    }
+    
+</style>
+
+<div class="" >
+
+    <div class="drag-and-drop" x-data="PageModel">
+
+        <div class="drag-and-drop__container drag-and-drop__container--from">
+            <h3 class="drag-and-drop__title">Available people</h3>
+            <ul class="drag-and-drop__items" x-bind:id="availablePeopleListId"
+                :class="{ 'drag-and-drop__items--removing ': removing  }">
+                <!-- loop through all our items -->
+                <template x-for="availablePerson in availablePeople">
+                    <li x-bind:id="availablePerson" class="drag-and-drop__item"
+                        :class="{ 'drag-and-drop__item--dragging': dragging }"
+                        draggable="true"
+                        x-data="{ dragging: false }"
+                        x-on:dragstart.self="
+                        dragging = true;
+                        event.dataTransfer.effectAllowed = 'move';
+                        //event.dataTransfer.setData('text/plain', event.target.id);
+                        const sourceListElement = event.target.closest('ul');
+                        let  obj = { personId: event.target.id, sourceListId: sourceListElement.id};
+                        event.dataTransfer.setData('text/plain', JSON.stringify(obj));
+                        "
+                        x-on:dragend="dragging = false"
+                        x-text="availablePerson"></li>
+                </template>
+
+                <!-- end -->
+            </ul>
+        </div>
+    </div>
+
+    <div class="drag-and-drop" x-data="PageModel">
+        <div class="months-container">
+            <template x-for="month in months">
+                <div class="month" x-bind:id="month.elementId">
+                    <div x-text="month.label"></div>
+                    <div class="month__items">
+
+                        <template x-for="week in month.weeks">
+                            <div class="week">
+                                <div class="week__label" x-text="week.label"></div>
+                                <div class="week__assigned-people">
+
+                                    <div class="drag-and-drop__items" x-bind:id="week.elementId"
+                                        :class="{ 'drag-and-drop__items--adding': adding }"
+                                        x-data="{ adding: false }"
+                                        x-on:drop.prevent="
+                                            let data = JSON.parse(event.dataTransfer.getData('text/plain'));
+                                            
+                                            assignPerson(data.personId, data.sourceListId, week.elementId, week);
+                                            adding = false;
+                                            "
+                                        x-on:dragover.prevent="adding = true"
+                                        x-on:dragleave.prevent="adding = false">
+
+                                        <template x-for="assignedPerson in week.assignedPeople">
+                                            <span x-bind:id="assignedPerson" class="drag-and-drop__item"
+                                                :class="{ 'drag-and-drop__item--dragging': dragging }"
+                                                draggable="true"
+                                                x-data="{ dragging: false }"
+                                                x-on:dragstart.self="
+                                                    dragging = true;
+                                                    event.dataTransfer.effectAllowed = 'move';
+                                                    let  obj = { personId: event.target.id, sourceListId: week.elementId};
+                                                    event.dataTransfer.setData('text/plain', JSON.stringify(obj));
+                                                    "
+                                                x-on:dragend="dragging = false"
+                                                x-text="assignedPerson"></span>
+                                        </template>
+
+                                        <!-- end -->
+                                    </div>
+
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@tailwindcss/browser@4"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+
+    function WeekModel(weekData, monthData) {
+        return {
+            label: weekData.label,
+            elementId: monthData.id + '-' + weekData.label,
+            parentMonthId: monthData.label,
+            assignedPeople: weekData.assignedPeople,
+            addAssignedPerson(person) {
+                // is the person already in the list?
+                let foundPerson = this.assignedPeople.find((element) => element == person);
+                if (foundPerson) {
+                    // for now lets not allow duplicates
+                    return;
+                }
+                // add the person
+                this.assignedPeople.push(person);
+            },
+            removeAssignedPerson(person) {
+                this.assignedPeople = this.assignedPeople.filter(item => item !== person)
+            },
+            init() {
+            }
+        }
+    }
+
+    function MonthModel(monthData) {
+        return {
+            id: monthData.id,
+            label: monthData.label,
+            elementId: monthData.id,
+            weeks: monthData.weeks.map(w => new WeekModel(w, monthData)),
+            init() {
+
+            }
+        }
+    }
+
+    function PageModel() {
+
+        let model = {
+
+            availablePeople: ["Abbey", "Bertrice", "Caroline", "Duncan", "Freddy"],
+            availablePeopleListId: "availablePeopleList",
+
+            months: [],
+
+            adding: false,
+            removing: false,
+            assignPerson(name, fromListId, tolistId, targetWeek) {
+
+                // if the source list and the target lis are the same then do nothing
+                if (fromListId === tolistId) {
+                    console.log("list matches so do nothing")
+                    return;
+                }
+
+                targetWeek.addAssignedPerson(name);
+
+                // is this a move, or a copy? for now we can assume if we don't find the week it is a copy, if we do find the week it is a move
+                let foundWeek = this.getWeekById(fromListId);
+                if (foundWeek != null) {
+                    foundWeek.removeAssignedPerson(name);
+                }
+
+            },
+            getWeekById(weekListId) {
+                // search through our months collection and locate the correct month/week
+                let idParts = weekListId.split('-');
+                const foundMonth = this.months.find((element) => element.id == idParts[0]);
+                if (foundMonth != null) {
+                    const foundWeek = foundMonth.weeks.find((element) => element.label == idParts[1]);
+                    return foundWeek;
+                }
+            },
+            init() {
+                let monthData = [
+                    {
+                        id: 'May2025',
+                        label: 'May 2025',
+                        weeks: [
+                            { label: 3, assignedPeople: [] },
+                            { label: 10, assignedPeople: [] },
+                            { label: 17, assignedPeople: [] },
+                            { label: 24, assignedPeople: [] },
+                            { label: 31, assignedPeople: [] },
+                        ]
+                    },
+                    {
+                        id: 'June2025',
+                        label: 'June 2025',
+                        weeks: [
+                            { label: 7, assignedPeople: [] },
+                            { label: 14, assignedPeople: [] },
+                            { label: 21, assignedPeople: [] },
+                            { label: 28, assignedPeople: [] }
+                        ]
+                    },
+                    {
+                        id: 'July2025',
+                        label: 'July 2025',
+                        weeks: [
+                            { label: 5, assignedPeople: [] },
+                            { label: 12, assignedPeople: [] },
+                            { label: 19, assignedPeople: [] },
+                            { label: 26, assignedPeople: [] },
+                        ]
+                    },
+                    {
+                        id: 'August2025',
+                        label: 'August 2025',
+                        weeks: [
+                            { label: 2, assignedPeople: [] },
+                            { label: 9, assignedPeople: [] },
+                            { label: 16, assignedPeople: [] },
+                            { label: 23, assignedPeople: [] },
+                            { label: 30, assignedPeople: [] },
+                        ]
+                    },
+                    {
+                        id: 'September2025',
+                        label: 'September 2025',
+                        weeks: [
+                            { label: 6, assignedPeople: [] },
+                            { label: 13, assignedPeople: [] },
+                            { label: 20, assignedPeople: [] },
+                            { label: 27, assignedPeople: [] },
+                        ]
+                    },
+                    {
+                        id: 'October2025',
+                        label: 'October 2025',
+                        weeks: [
+                            { label: 4, assignedPeople: [] },
+                            { label: 11, assignedPeople: [] },
+                            { label: 18, assignedPeople: [] },
+                            { label: 25, assignedPeople: [] },
+                        ]
+                    }
+                ];
+                this.months = monthData.map(m => new MonthModel(m));
+            }
+        };
+        return model;
+    };
+
+
+
+</script>

@@ -1,0 +1,228 @@
+﻿@{
+    ViewData["Title"] = "drag and drop";
+}
+
+<style>
+    .drag-and-drop {
+        display: flex;
+        max-width: 760px;
+        padding: 20px;
+        margin: 0 auto;
+    }
+    
+    .drag-and-drop__container
+    {
+        position: relative;
+        overflow: hidden;
+        width: 50%;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+    }
+
+    .drag-and-drop__divider {
+        padding: 10px;
+        font-size: 20px;
+        align-self: center;
+    }
+
+    .drag-and-drop__title {
+        padding: 15px 20px;
+        font-size: 20px;
+        background: #ddd;
+        margin-bottom: 0;
+    }
+
+    .drag-and-drop__items {
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        min-height: 150px;
+        margin: 0 -1px;
+        padding-bottom: 40px;
+        border-top: 1px solid #ccc;
+        padding-left: 0;
+    }
+    
+    .drag-and-drop__items--adding
+    {
+        background-color: #9AE6B4;
+    }
+
+    .drag-and-drop__items--removing {
+        background-color: #FBD38D;
+    }
+
+    .drag-and-drop__item {
+        padding: 15px 20px;
+        border: 1px solid #ccc;
+        border-top: 0;
+        line-height: 1;
+        cursor: move;
+        background-color: #fff;
+    }
+
+    .drag-and-drop__item:hover {
+        background-color: #eee;
+    }
+
+    .drag-and-drop__item--dragging {
+        color: #ccc !important;
+        background-color: #fff !important;
+    }
+      
+    
+</style>
+
+<div class="" >
+    <div class="drag-and-drop" x-data="{ adding: false, removing: false }">
+        <div class="drag-and-drop__container drag-and-drop__container--from">
+            <h3 class="drag-and-drop__title">From</h3>
+            <ul class="drag-and-drop__items"
+                :class="{ 'drag-and-drop__items--removing ': removing  }"
+                x-on:drop="removing = false"
+                x-on:drop.prevent="
+                  const id = event.dataTransfer.getData('text/plain');
+                  const target = event.target.closest('ul');
+                  const element = document.getElementById(id);
+                  target.appendChild(element);
+                "
+                x-on:dragover.prevent="removing = true"
+                x-on:dragleave.prevent="removing = false">
+                <!-- loop through all our items -->
+                <li id="item-1" class="drag-and-drop__item"
+                    :class="{ 'drag-and-drop__item--dragging': dragging }"
+                    draggable="true"
+                    x-data="{ dragging: false }"
+                    x-on:dragstart.self="
+                      dragging = true;
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', event.target.id);
+                    "
+                    x-on:dragend="dragging = false">item 1</li>
+                <!-- end -->
+            </ul>
+        </div>
+        <div class="drag-and-drop__divider">⇄</div>
+        <div class="drag-and-drop__container drag-and-drop__container--to">
+            <h3 class="drag-and-drop__title">To</h3>
+            <ul class="drag-and-drop__items"
+                :class="{ 'drag-and-drop__items--adding': adding }"
+                x-on:drop="adding = false"
+                x-on:drop.prevent="
+                const id = event.dataTransfer.getData('text/plain');
+                const target = event.target.closest('ul');
+                const element = document.getElementById(id);
+                target.appendChild(element);
+            "
+                x-on:dragover.prevent="adding = true"
+                x-on:dragleave.prevent="adding = false">
+                <!-- loop through all our selected items -->
+                <li id="item-2" class="drag-and-drop__item"
+                    :class="{ 'drag-and-drop__item--dragging': dragging }"
+                    draggable="true"
+                    x-data="{ dragging: false }"
+                    x-on:dragstart.self="
+                      dragging = true;
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', event.target.id);
+                    "
+                    x-on:dragend="dragging = false">ffffff</li>
+                <li id="item-3" class="drag-and-drop__item"
+                    :class="{ 'drag-and-drop__item--dragging': dragging }"
+                    draggable="true"
+                    x-data="{ dragging: false }"
+                    x-on:dragstart.self="
+                      dragging = true;
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', event.target.id);
+                    "
+                    x-on:dragend="dragging = false">item 3</li>
+                <!-- end -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@tailwindcss/browser@4"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+
+    // function CustomerContactsModel(customerContactData) {
+
+    //     return {
+    //         name: customerContactData.name,
+    //         email: customerContactData.email
+    //     }
+    // }
+
+    // function CustomerAddressModel(customerAddressData) {
+
+    //     let joinedAddress = customerAddressData.addressLine1;
+    //     if (customerAddressData.addressLine2 != null) joinedAddress = joinedAddress + ", " + customerAddressData.addressLine2;
+    //     if (customerAddressData.addressLine3 != null) joinedAddress = joinedAddress + ", " + customerAddressData.addressLine3;
+    //     if (customerAddressData.addressLine4 != null) joinedAddress = joinedAddress + ", " + customerAddressData.addressLine4;
+
+    //     return {
+    //         fullAddress: joinedAddress,
+    //         country: customerAddressData.country
+    //     }
+    // };
+
+    // function CustomerModel(customerData) {
+
+    //     console.log(customerData);
+
+    //     return {
+    //         businessName: customerData.businessName,
+    //         industryDescription: customerData.industryDescription,
+    //         addresses: customerData.addresses.map(a => CustomerAddressModel(a)),
+    //         contacts: customerData.contacts.map(c => CustomerContactsModel(c)),
+    //         motto: customerData.motto,
+    //         showContacts: true,
+    //         // this is like a ko.computed, the value in the html is automatically updated if any of the properties it depends on change
+    //         get tagLine() {
+    //             if (this.motto === '') return "";
+    //             return this.businessName + " - " + this.motto
+    //         },
+    //         // this is triggered by an event in the code e.g. click
+    //         toggleShowingContacts() {
+    //             console.log(this.showContacts)
+    //             this.showContacts = !this.showContacts;
+    //             console.log(this.showContacts)
+    //         }
+    //     }
+    // };
+    
+    // function CustomerPageModel() {
+    //     return {
+
+    //         customers: [],
+
+    //         // popuplate our js model
+    //         async getData() {
+    //             const url = "https://localhost:7096/Customer/CustomerData";
+    //             try {
+    //                 const response = await fetch(url);
+    //                 if (!response.ok) {
+    //                     throw new Error(`Response status: ${response.status}`);
+    //                 }
+
+    //                 const json = await response.json();
+    //                 console.log("our data is");
+    //                 console.log(json);
+    //                 this.customers = json.customers.map(c => CustomerModel(c));
+    //                 console.log("our customers collection is now")
+    //                 console.log(this.customers)
+
+    //             } catch (error) {
+    //                 console.error(error.message);
+    //             }
+    //         },
+
+    //         init() {
+    //             this.getData();
+    //         }
+    //     }
+    // };
+
+</script>
